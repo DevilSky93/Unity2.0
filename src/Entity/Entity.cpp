@@ -13,7 +13,6 @@ std::map<std::string, std::function<Component&(Entity&)>> Entity::_allocators;
 Entity::Entity(Transform& parent, Scene& scene):
 _transform(this, &parent), _scene(scene)
 {
-
 }
 
 ComponentIterator Entity::components_begin()
@@ -56,6 +55,16 @@ Scene& Entity::getScene() const
 	return _scene;
 }
 
+const std::string& Entity::getTag() const
+{
+	return _tag;
+}
+
+void Entity::setTag(std::string tag)
+{
+	_tag = tag;
+}
+
 void Entity::onUpdate()
 {
 	for (auto it = components_begin(); it != components_end(); it++)
@@ -76,10 +85,12 @@ ObjectSerialization Entity::serialize() const
 {
 	ObjectSerialization entitySerialization;
 	
-	entitySerialization.version = 1;
+	entitySerialization.version = 2;
 	entitySerialization.identifier = "Entity";
 	
 	entitySerialization.data["name"] = getName();
+	if(entitySerialization.version == 2)
+		entitySerialization.data["tag"] = getTag();
 	
 	const Transform& transform = getTransform();
 	nlohmann::ordered_json transformData;
@@ -109,6 +120,8 @@ ObjectSerialization Entity::serialize() const
 void Entity::deserialize(const ObjectSerialization& entitySerialization)
 {
 	setName(entitySerialization.data["name"].get<std::string>());
+	if(entitySerialization.version==2)
+		setTag(entitySerialization.data["tag"].get<std::string>());
 	
 	Transform& transform = getTransform();
 	transform.setLocalPosition(glm::make_vec3(entitySerialization.data["transform"]["position"].get<std::vector<float>>().data()));
@@ -139,6 +152,7 @@ void Entity::onDrawUi()
 {
 	ImGui::PushID(this);
 	ImGui::InputText("Name", &_name);
+	ImGui::InputText("Tag", &_tag);
 	
 	ImGui::Spacing();
 	ImGui::Separator();

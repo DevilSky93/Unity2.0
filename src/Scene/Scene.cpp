@@ -61,6 +61,19 @@ EntityIterator Scene::removeEntity(EntityIterator where)
 	return EntityIterator(_entities.erase(where.getUnderlyingIterator()));
 }
 
+std::vector<Entity*> Scene::FindEntitiesWithTag(std::string tag)
+{
+	std::vector<Entity*> listEntity;
+	for (auto it = entities_begin(); it != entities_end(); it++)
+	{
+		if (it->getTag() == tag)
+		{
+			listEntity.push_back(&*it);
+		}
+	}
+	return listEntity;
+}
+
 Skybox* Scene::getSkybox()
 {
 	return _skybox;

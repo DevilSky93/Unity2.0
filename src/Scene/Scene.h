@@ -23,6 +23,8 @@ public:
 	
 	Entity& createEntity(Transform& parent);
 	EntityIterator removeEntity(EntityIterator where);
+
+	std::vector<Entity*> FindEntitiesWithTag(std::string tag);
 	
 	EntityIterator entities_begin();
 	EntityIterator entities_end();

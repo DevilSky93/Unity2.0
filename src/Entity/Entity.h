@@ -34,6 +34,9 @@ public:
 	
 	const std::string& getName() const;
 	void setName(std::string name);
+
+	const std::string& getTag() const;
+	void setTag(std::string tag);
 	
 	void onDrawUi();
 	void onUpdate();
@@ -51,6 +54,7 @@ public:
 
 private:
 	std::string _name = "New Entity";
+	std::string _tag = "Default";
 	std::vector<std::unique_ptr<Component>> _components;
 	Scene& _scene;
 	Transform _transform;
