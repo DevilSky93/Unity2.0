@@ -68,7 +68,11 @@ const std::size_t& Entity::getTagHash() const
 void Entity::setTag(std::string tag)
 {
 	_tag = tag;
-	_tagHash = std::hash<std::string>{}(tag);
+	UpdateTagHash();
+}
+
+void Entity::UpdateTagHash() {
+	_tagHash = std::hash<std::string>{}(_tag);
 }
 
 void Entity::onUpdate()
@@ -158,7 +162,8 @@ void Entity::onDrawUi()
 {
 	ImGui::PushID(this);
 	ImGui::InputText("Name", &_name);
-	ImGui::InputText("Tag", &_tag);
+	if (ImGui::InputText("Tag", &_tag))
+		UpdateTagHash();
 	
 	ImGui::Spacing();
 	ImGui::Separator();

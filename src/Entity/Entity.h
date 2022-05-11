@@ -38,6 +38,7 @@ public:
 	const std::string& getTag() const;
 	const std::size_t& getTagHash() const;
 	void setTag(std::string tag);
+	void UpdateTagHash();
 	
 	void onDrawUi();
 	void onUpdate();
