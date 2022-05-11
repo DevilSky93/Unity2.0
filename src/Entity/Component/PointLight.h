@@ -48,6 +48,8 @@ public:
 	void deserialize(const ObjectSerialization& serialization) override;
 
 private:
+	friend class PointLightSystem;
+	
 	static constexpr float NEAR_DISTANCE = 0.01f;
 	static constexpr float FAR_DISTANCE = 100.0f;
 	

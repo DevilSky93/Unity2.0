@@ -51,6 +51,8 @@ public:
 	void deserialize(const ObjectSerialization& serialization) override;
 
 private:
+	friend class DirectionalLightSystem;
+	
 	std::unique_ptr<Texture> _shadowMap;
 	std::unique_ptr<Framebuffer> _shadowMapFb;
 	ShaderProgram* _shadowMapProgram;

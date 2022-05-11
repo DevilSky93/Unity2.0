@@ -6,11 +6,16 @@
 #include "Transform.h"
 #include "../Iterator/EntityIterator.h"
 #include "../Iterator/EntityConstIterator.h"
+#include "../Entity/System/System.h"
 
 #include <nlohmann/json.hpp>
 #include <filesystem>
 
 class Renderer;
+class Animator;
+class ShapeRenderer;
+class PointLight;
+class DirectionalLight;
 
 class Scene
 {
@@ -47,6 +52,11 @@ private:
 	std::string _name;
 	Skybox* _skybox = nullptr;
 	ResourceManager _resourceManager;
+	
+	System<Animator> _animators;
+	System<ShapeRenderer> _shapeRenderers;
+	System<PointLight> _pointLights;
+	System<DirectionalLight> _directionalLights;
 	
 	static void deserializeEntity(const nlohmann::ordered_json& json, Transform& parent, int version, Scene& scene);
 	nlohmann::ordered_json serializeEntity(const Entity& entity) const;

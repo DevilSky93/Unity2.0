@@ -48,6 +48,8 @@ public:
 	void deserialize(const ObjectSerialization& shapeRendererSerialization) override;
 
 private:
+	friend class ShapeRendererSystem;
+	
 	Material* _material = nullptr;
 	std::unique_ptr<Shape> _shape;
 	bool _contributeShadows = true;
