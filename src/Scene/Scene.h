@@ -2,11 +2,11 @@
 
 #include "../ResourceManagement/Skybox.h"
 #include "../ResourceManagement/ResourceManager.h"
-#include "Camera.h"
 #include "Transform.h"
 #include "../Iterator/EntityIterator.h"
 #include "../Iterator/EntityConstIterator.h"
-
+#include "Camera.h"
+#include "../ThreadPool.h"
 #include <nlohmann/json.hpp>
 #include <filesystem>
 
@@ -17,7 +17,9 @@ class Scene
 public:
 	Scene(std::string name = "Untitled Scene");
 	~Scene();
-	
+
+	void StartThreadUpdate();
+	void StopThreadUpdate();
 	void onUpdate();
 	void onPreRender(RenderContext& context);
 	
@@ -31,9 +33,9 @@ public:
 	EntityConstIterator entities_cbegin() const;
 	EntityConstIterator entities_cend() const;
 	
-	Transform& getRoot();
+	Transform& getRoot() const;
 	
-	Skybox* getSkybox();
+	Skybox* getSkybox() const;
 	void setSkybox(Skybox* skybox);
 	
 	ResourceManager& getRM();
@@ -46,10 +48,12 @@ public:
 private:
 	std::unique_ptr<Transform> _root;
 	std::list<std::unique_ptr<Entity>> _entities;
+	std::vector<std::vector<Entity>> _batches;
 	std::string _name;
 	Skybox* _skybox = nullptr;
 	ResourceManager _resourceManager;
-	
+	ThreadPool pool_update;
+
 	static void deserializeEntity(const nlohmann::ordered_json& json, Transform& parent, int version, Scene& scene);
 	nlohmann::ordered_json serializeEntity(const Entity& entity) const;
 };

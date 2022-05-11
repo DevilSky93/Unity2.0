@@ -80,6 +80,7 @@ void Engine::init()
 
 void Engine::run()
 {
+	_scene->StartThreadUpdate();
 	while (!_window->shouldClose())
 	{
 		glfwPollEvents();
@@ -87,7 +88,7 @@ void Engine::run()
 		_timer.onNewFrame();
 		UIHelper::onNewFrame();
 		
-		_scene->onUpdate();
+		//_scene->onUpdate();
 		
 		UIHelper::render();
 		
@@ -98,6 +99,7 @@ void Engine::run()
 void Engine::shutdown()
 {
 	UIHelper::shutdown();
+	_scene->StopThreadUpdate();
 	_scene.reset();
 	_globalResourceManager.reset();
 	_window.reset();

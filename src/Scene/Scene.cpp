@@ -1,5 +1,3 @@
-#include <stdexcept>
-#include "../Helper/VectorHelper.h"
 #include "../Entity/Entity.h"
 #include "../Helper/JsonHelper.h"
 #include <fmt/format.h>
@@ -9,18 +7,31 @@
 #include "../UI/Window/UIInspector.h"
 #include "Camera.h"
 #include "../UI/Window/UIViewport.h"
-#include "../Helper/ThreadHelper.h"
 
-Scene::Scene(std::string name):
-_root(Transform::createSceneRoot()), _name(std::move(name)), _resourceManager(1)
+Scene::Scene(std::string name) :
+	_root(Transform::createSceneRoot()), _name(std::move(name)), _resourceManager(1)
 {
-
+	for (auto it = entities_begin(); it != entities_end(); it++)
+	{
+		Entity* entity = &*it;
+		pool_update.QueueJob([=] {entity->onUpdate(); });
+	}
 }
 
-Transform& Scene::getRoot()
+Transform& Scene::getRoot() const
 {
 	return *_root.get();
 }
+
+void Scene::StartThreadUpdate()
+{
+	pool_update.Start();
+}
+void Scene::StopThreadUpdate()
+{
+	pool_update.Stop();
+}
+
 
 void Scene::onUpdate()
 {
@@ -40,7 +51,10 @@ void Scene::onPreRender(RenderContext& context)
 
 Entity& Scene::createEntity(Transform& parent)
 {
-	return *_entities.emplace_back(new Entity(parent, *this)).get();
+	auto entity = new Entity(parent, *this);
+	pool_update.QueueJob([=] {entity->onUpdate(); });
+
+	return *_entities.emplace_back(entity);
 }
 
 EntityIterator Scene::removeEntity(EntityIterator where)
@@ -57,7 +71,7 @@ EntityIterator Scene::removeEntity(EntityIterator where)
 			}
 		}
 	}
-	
+
 	return EntityIterator(_entities.erase(where.getUnderlyingIterator()));
 }
 
@@ -74,7 +88,7 @@ std::vector<Entity*> Scene::FindEntitiesWithTag(std::string tag)
 	return listEntity;
 }
 
-Skybox* Scene::getSkybox()
+Skybox* Scene::getSkybox() const
 {
 	return _skybox;
 }
@@ -94,15 +108,15 @@ void Scene::load(const std::filesystem::path& path)
 	nlohmann::ordered_json jsonRoot = JsonHelper::loadJsonFromFile(path.generic_string());
 
 	int version = jsonRoot["version"].get<int>();
-	
+
 	Engine::setScene(std::make_unique<Scene>(path.filename().replace_extension().generic_string()));
 	Scene& scene = Engine::getScene();
-	
+
 	Camera camera(glm::make_vec3(jsonRoot["camera"]["position"].get<std::vector<float>>().data()),
 		glm::make_vec2(jsonRoot["camera"]["spherical_coords"].get<std::vector<float>>().data()));
 
 	camera.setExposure(jsonRoot["camera"]["exposure"].get<float>());
-	
+
 	UIViewport::setCamera(camera);
 
 	if (!jsonRoot["skybox"].is_null())
@@ -120,10 +134,10 @@ void Scene::load(const std::filesystem::path& path)
 void Scene::deserializeEntity(const nlohmann::ordered_json& json, Transform& parent, int version, Scene& scene)
 {
 	ObjectSerialization serialization = ObjectSerialization::fromJson(json);
-	
+
 	Entity& entity = scene.createEntity(parent);
 	entity.deserialize(serialization);
-	
+
 	for (const nlohmann::ordered_json& child : json["children"])
 	{
 		deserializeEntity(child, entity.getTransform(), version, scene);
@@ -133,21 +147,21 @@ void Scene::deserializeEntity(const nlohmann::ordered_json& json, Transform& par
 void Scene::save(const std::filesystem::path& path)
 {
 	_name = path.filename().replace_extension().generic_string();
-	
+
 	nlohmann::ordered_json jsonRoot;
-	
+
 	jsonRoot["version"] = 1;
-	
+
 	const Camera& camera = UIViewport::getCamera();
 	nlohmann::ordered_json jsonCamera;
 	glm::vec3 cameraPosition = camera.getPosition();
-	jsonCamera["position"] = {cameraPosition.x, cameraPosition.y, cameraPosition.z};
+	jsonCamera["position"] = { cameraPosition.x, cameraPosition.y, cameraPosition.z };
 	glm::vec2 cameraRotation = camera.getSphericalCoords();
-	jsonCamera["spherical_coords"] = {cameraRotation.x, cameraRotation.y};
+	jsonCamera["spherical_coords"] = { cameraRotation.x, cameraRotation.y };
 	jsonCamera["exposure"] = camera.getExposure();
-	
+
 	jsonRoot["camera"] = jsonCamera;
-	
+
 	nlohmann::ordered_json jsonSkybox;
 	if (_skybox != nullptr)
 	{
@@ -155,23 +169,23 @@ void Scene::save(const std::filesystem::path& path)
 		jsonSkybox["rotation"] = _skybox->getRotation();
 	}
 	jsonRoot["skybox"] = jsonSkybox;
-	
+
 	std::vector<nlohmann::ordered_json> entities;
 	entities.reserve(_root->getChildren().size());
 	for (Transform* child : _root->getChildren())
 	{
 		entities.push_back(serializeEntity(*child->getOwner()));
 	}
-	
+
 	jsonRoot["entities"] = entities;
-	
+
 	JsonHelper::saveJsonToFile(jsonRoot, path.generic_string());
 }
 
 nlohmann::ordered_json Scene::serializeEntity(const Entity& entity) const
 {
 	nlohmann::ordered_json jsonData = entity.serialize().toJson();
-	
+
 	const Transform& transform = entity.getTransform();
 	std::vector<nlohmann::ordered_json> children;
 	children.reserve(transform.getChildren().size());
@@ -180,14 +194,14 @@ nlohmann::ordered_json Scene::serializeEntity(const Entity& entity) const
 		children.push_back(serializeEntity(*child->getOwner()));
 	}
 	jsonData["children"] = children;
-	
+
 	return jsonData;
 }
 
 Scene::~Scene()
 {
 	_entities.clear();
-	
+
 	_root.reset();
 }
 

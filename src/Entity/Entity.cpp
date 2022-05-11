@@ -7,6 +7,7 @@
 #include "Component/DirectionalLight.h"
 #include "Component/PointLight.h"
 #include "Component/ShapeRenderer.h"
+#include "../Logging/Logger.h"
 
 std::map<std::string, std::function<Component&(Entity&)>> Entity::_allocators;
 
@@ -67,9 +68,13 @@ void Entity::setTag(std::string tag)
 
 void Entity::onUpdate()
 {
-	for (auto it = components_begin(); it != components_end(); it++)
+	while(true)
 	{
-		it->onUpdate();
+		Logger::info(getName());
+		for (auto it = components_begin(); it != components_end(); it++)
+		{
+			it->onUpdate();
+		}
 	}
 }
 

@@ -22,7 +22,7 @@ public:
 	static Scene& getScene();
 	static void setScene(std::unique_ptr<Scene>&& scene);
 	static Timer& getTimer();
-	
+
 private:
 	static std::unique_ptr<Window> _window;
 	static std::unique_ptr<ResourceManager> _globalResourceManager;
