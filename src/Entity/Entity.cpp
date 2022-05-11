@@ -60,9 +60,15 @@ const std::string& Entity::getTag() const
 	return _tag;
 }
 
+const std::size_t& Entity::getTagHash() const
+{
+	return _tagHash;
+}
+
 void Entity::setTag(std::string tag)
 {
 	_tag = tag;
+	_tagHash = std::hash<std::string>{}(tag);
 }
 
 void Entity::onUpdate()

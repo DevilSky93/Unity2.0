@@ -64,9 +64,10 @@ EntityIterator Scene::removeEntity(EntityIterator where)
 std::vector<Entity*> Scene::FindEntitiesWithTag(std::string tag)
 {
 	std::vector<Entity*> listEntity;
+	std::size_t tagHash = std::hash<std::string>{}(tag);
 	for (auto it = entities_begin(); it != entities_end(); it++)
 	{
-		if (it->getTag() == tag)
+		if (it->getTagHash() == tagHash)
 		{
 			listEntity.push_back(&*it);
 		}
